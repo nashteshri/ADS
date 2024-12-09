@@ -1,0 +1,92 @@
+-- 1. Create Keyspace
+CREATE KEYSPACE employee 
+WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 3};
+
+-- 2. Create emp_table
+CREATE TABLE employee.emp_table (
+    emp_id int,
+    name text,
+    city text,
+    designation text,
+    experience float,
+    PRIMARY KEY (emp_id)
+);
+
+-- 3. Perform Operations on emp_table:
+
+-- a. Insert Rows
+INSERT INTO employee.emp_table (emp_id, name, city, designation, experience)
+VALUES (1, 'Akash Mane', 'Mumbai', 'Software Engineer', 3.5);
+
+INSERT INTO employee.emp_table (emp_id, name, city, designation, experience)
+VALUES (2, 'Amar Jadhav', 'Pune', 'Data Analyst', 2.0);
+
+-- b. Update Rows
+UPDATE employee.emp_table
+SET city = 'Delhi', designation = 'Senior Software Engineer'
+WHERE emp_id = 1;
+
+-- c. Upsert Rows (Update or Insert)
+INSERT INTO employee.emp_table (emp_id, name, city, designation, experience)
+VALUES (1, 'Akash Mane', 'Bangalore', 'Tech Lead', 4.0); 
+
+-- d. Retrieve Data
+SELECT * FROM employee.emp_table WHERE emp_id = 1;
+
+SELECT * FROM employee.emp_table;
+
+-- e. Alter Table to Add Columns One by One
+
+-- Add 'email' column
+ALTER TABLE employee.emp_table 
+ADD email SET<text>;
+
+-- Add 'expertise' column
+ALTER TABLE employee.emp_table 
+ADD expertise LIST<text>;
+
+-- Add 'prev_jobs' column
+ALTER TABLE employee.emp_table 
+ADD prev_jobs MAP<text, int>;
+
+-- f. Insert New Rows
+INSERT INTO employee.emp_table (emp_id, name, city, designation, experience, email, expertise, prev_jobs)
+VALUES (3, 'Kush Giri', 'Hyderabad', 'DevOps Engineer', 5.0, {'kush@example.com'}, ['AWS', 'Docker'], {'CompanyA': 2, 'CompanyB': 3});
+
+-- g. Delete Rows and Values
+DELETE FROM employee.emp_table WHERE emp_id = 2;
+
+UPDATE employee.emp_table 
+SET prev_jobs = prev_jobs - {'CompanyA'}
+WHERE emp_id = 3;
+
+-- 4. Create product Table
+CREATE TABLE employee.product (
+    id UUID PRIMARY KEY,
+    name text,
+    price float,
+    quan int
+);
+
+-- 5. Perform Operations on product Table:
+
+-- a. Insert Rows
+INSERT INTO employee.product (id, name, price, quan)
+VALUES (uuid(), 'Laptop', 50000.0, 10);
+
+INSERT INTO employee.product (id, name, price, quan)
+VALUES (uuid(), 'Phone', 30000.0, 15);
+
+-- b. Alter Table to Add New Columns
+
+-- Add 'inv_date' column
+ALTER TABLE employee.product 
+ADD inv_date timestamp;
+
+-- Add 'available' column
+ALTER TABLE employee.product 
+ADD available boolean;
+
+-- c. Insert New Rows
+INSERT INTO employee.product (id, name, price, quan, inv_date, available)
+VALUES (uuid(), 'Tablet', 25000.0, 20, toTimestamp(now()), true);

@@ -1,0 +1,100 @@
+-- 1. Creating and Managing Tablespaces
+-- a. Create a new tablespace named emp_data with an initial size of 20MB
+CREATE TABLESPACE emp_data 
+DATAFILE '/u01/app/oracle/oradata/emp_data.dbf' 
+SIZE 20M 
+AUTOEXTEND ON NEXT 10M MAXSIZE 100M;
+
+-- b. Check the size and status of the tablespace
+SELECT tablespace_name, file_name, bytes / (1024 * 1024) AS size_mb, status 
+FROM dba_data_files 
+WHERE tablespace_name = 'EMP_DATA';
+
+-- 2. Resize the Tablespace
+-- a. Resize the emp_data tablespace to 50MB
+ALTER DATABASE DATAFILE '/u01/app/oracle/oradata/emp_data.dbf' RESIZE 50M;
+
+-- b. Verify the size change
+SELECT tablespace_name, file_name, bytes / (1024 * 1024) AS size_mb 
+FROM dba_data_files 
+WHERE tablespace_name = 'EMP_DATA';
+
+-- 3. Temporary Tablespace
+-- c. Create a temporary tablespace and assign it as the default
+CREATE TEMPORARY TABLESPACE temp_ts 
+TEMPFILE '/u01/app/oracle/oradata/temp_ts.dbf' 
+SIZE 10M 
+AUTOEXTEND ON NEXT 5M MAXSIZE 50M;
+
+ALTER DATABASE DEFAULT TEMPORARY TABLESPACE temp_ts;
+
+-- d. Check the size and status of the temporary tablespace
+SELECT tablespace_name, file_name, bytes / (1024 * 1024) AS size_mb, status 
+FROM dba_temp_files;
+
+-- 4. Undo Tablespace
+-- a. Create an undo tablespace
+CREATE UNDO TABLESPACE undo_ts 
+DATAFILE '/u01/app/oracle/oradata/undo_ts.dbf' 
+SIZE 20M 
+AUTOEXTEND ON NEXT 10M MAXSIZE 100M;
+
+-- b. Check the size and status of the undo tablespace
+SELECT tablespace_name, file_name, bytes / (1024 * 1024) AS size_mb, status 
+FROM dba_data_files 
+WHERE tablespace_name = 'UNDO_TS';
+
+-- 5. Create user and assign Tablespace Quotas
+-- a. Create user hr_user on emp_data tablespace and assign a 10MB quota
+CREATE USER hr_user 
+IDENTIFIED BY password 
+DEFAULT TABLESPACE emp_data 
+QUOTA 10M ON emp_data;
+
+-- b. Grant privileges to hr_user
+GRANT CREATE SESSION, CREATE TABLE TO hr_user;
+
+-- c. Check max_bytes and used_data for hr_user
+SELECT tablespace_name, max_bytes / (1024 * 1024) AS max_mb, bytes_used / (1024 * 1024) AS used_mb 
+FROM dba_ts_quotas 
+WHERE username = 'HR_USER';
+
+-- 6. Create Table in tablespace
+-- a. Connect with hr_user
+CONNECT hr_user/password;
+
+-- b. Create table employee in emp_data tablespace
+CREATE TABLE employee (
+    emp_id NUMBER(5), 
+    emp_name VARCHAR2(50), 
+    emp_address VARCHAR2(100)
+) TABLESPACE emp_data;
+
+-- c. Insert a few records into the employee table
+INSERT INTO employee VALUES (1, 'John Doe', '123 Main St');
+INSERT INTO employee VALUES (2, 'Jane Smith', '456 Elm St');
+COMMIT;
+
+-- d. Check max_bytes and free_space for hr_user
+SELECT tablespace_name, max_bytes / (1024 * 1024) AS max_mb, bytes_used / (1024 * 1024) AS used_mb 
+FROM dba_ts_quotas 
+WHERE username = 'HR_USER';
+
+-- 7. Updates to Tablespace
+-- a. Take emp_data tablespace offline
+ALTER TABLESPACE emp_data OFFLINE;
+
+-- Verify that the tablespace is offline
+SELECT tablespace_name, status FROM dba_tablespaces WHERE tablespace_name = 'EMP_DATA';
+
+-- b. Bring emp_data tablespace back online
+ALTER TABLESPACE emp_data ONLINE;
+
+-- Verify the tablespace status
+SELECT tablespace_name, status FROM dba_tablespaces WHERE tablespace_name = 'EMP_DATA';
+
+-- c. Remove the quota for hr_user on emp_data tablespace
+ALTER USER hr_user QUOTA 0 ON emp_data;
+
+-- Verify the quota removal
+SELECT tablespace_name, max_bytes FROM dba_ts_quotas WHERE username = 'HR_USER';

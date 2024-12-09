@@ -1,0 +1,88 @@
+-- 1. Create the `employees` table with range partitioning
+CREATE TABLE employees (
+    id INT PRIMARY KEY,
+    fname VARCHAR2(25) NOT NULL,
+    lname VARCHAR2(25) NOT NULL,
+    store_id INT NOT NULL,
+    department_id INT NOT NULL
+)
+PARTITION BY RANGE (id) (
+    PARTITION P0 VALUES LESS THAN (5),
+    PARTITION P1 VALUES LESS THAN (10),
+    PARTITION P2 VALUES LESS THAN (15),
+    PARTITION P3 VALUES LESS THAN (MAXVALUE)
+);
+
+-- 2. Insert 20 records into the employees table
+BEGIN
+    FOR i IN 1..20 LOOP
+        INSERT INTO employees (id, fname, lname, store_id, department_id)
+        VALUES (i, 'First' || i, 'Last' || i, MOD(i, 3) + 1, MOD(i, 5) + 1);
+    END LOOP;
+    COMMIT;
+END;
+/
+
+-- Queries on Range Partitioning
+-- 1. Retrieve employee details from partition P1 and P2
+SELECT * FROM employees PARTITION (P1);
+SELECT * FROM employees PARTITION (P2);
+
+-- 2. Retrieve employee details from partition P0 and P1 where fname begins with 'S'
+SELECT * FROM employees PARTITION (P0) WHERE fname LIKE 'S%';
+SELECT * FROM employees PARTITION (P1) WHERE fname LIKE 'S%';
+
+-- 3. Count number of employees from each department in P1, P2, and P3
+SELECT department_id, COUNT(*) AS employee_count 
+FROM employees PARTITION (P1) 
+GROUP BY department_id
+UNION ALL
+SELECT department_id, COUNT(*) AS employee_count 
+FROM employees PARTITION (P2) 
+GROUP BY department_id
+UNION ALL
+SELECT department_id, COUNT(*) AS employee_count 
+FROM employees PARTITION (P3) 
+GROUP BY department_id;
+
+
+
+
+
+
+
+
+
+
+-- 1. Create the `sales_hash` table with hash partitioning
+CREATE TABLE sales_hash (
+    salesman_id NUMBER(5) PRIMARY KEY,
+    salesman_name VARCHAR2(30),
+    sales_amount NUMBER(10),
+    week_no NUMBER(2)
+)
+PARTITION BY HASH (salesman_id) PARTITIONS 4;
+
+-- 2. Insert 10 records into the sales_hash table
+BEGIN
+    FOR i IN 1..10 LOOP
+        INSERT INTO sales_hash (salesman_id, salesman_name, sales_amount, week_no)
+        VALUES (i, 'Salesman' || i, 1000 + i * 500, MOD(i, 4) + 1);
+    END LOOP;
+    COMMIT;
+END;
+/
+
+-- Queries on Hash Partitioning
+-- 1. Retrieve sales details from the 2nd partition
+SELECT * FROM sales_hash PARTITION (SYS_P2);
+
+-- 2. Retrieve names of salesmen and amounts from the 4th partition where sales_amount is between 2000 and 5000
+SELECT salesman_name, sales_amount 
+FROM sales_hash PARTITION (SYS_P4) 
+WHERE sales_amount BETWEEN 2000 AND 5000;
+
+-- 3. Find average sales amount per week from the 3rd partition
+SELECT week_no, AVG(sales_amount) AS avg_sales
+FROM sales_hash PARTITION (SYS_P3)
+GROUP BY week_no;

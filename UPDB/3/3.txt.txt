@@ -1,0 +1,64 @@
+-- Step 1: Create the global conceptual schema `emp` and insert 10 records
+CREATE TABLE emp (
+    eno INT PRIMARY KEY,
+    ename VARCHAR2(50),
+    city VARCHAR2(50),
+    salary NUMBER(10)
+);
+
+-- Insert 10 records into the emp table
+INSERT INTO emp VALUES (1, 'Alice', 'New York', 12000);
+INSERT INTO emp VALUES (2, 'Bob', 'Los Angeles', 18000);
+INSERT INTO emp VALUES (3, 'Charlie', 'Chicago', 15000);
+INSERT INTO emp VALUES (4, 'David', 'Houston', 22000);
+INSERT INTO emp VALUES (5, 'Eve', 'Phoenix', 14000);
+INSERT INTO emp VALUES (6, 'Frank', 'Philadelphia', 16000);
+INSERT INTO emp VALUES (7, 'Grace', 'San Antonio', 13000);
+INSERT INTO emp VALUES (8, 'Hank', 'San Diego', 25000);
+INSERT INTO emp VALUES (9, 'Ivy', 'Dallas', 20000);
+INSERT INTO emp VALUES (10, 'Jack', 'San Jose', 11000);
+
+COMMIT;
+
+-- Step 2: Horizontal Fragmentation
+-- emph1: Contains tuples with salary <= 15000
+CREATE TABLE emph1 AS
+SELECT * FROM emp WHERE salary <= 15000;
+
+-- emph2: Contains tuples with salary > 15000
+CREATE TABLE emph2 AS
+SELECT * FROM emp WHERE salary > 15000;
+
+-- Step 3: Vertical Fragmentation
+-- empv1: Contains attributes (eno, ename)
+CREATE TABLE empv1 AS
+SELECT eno, ename FROM emp;
+
+-- empv2: Contains attributes (eno, city, salary)
+CREATE TABLE empv2 AS
+SELECT eno, city, salary FROM emp;
+
+-- Queries Based on Fragments
+-- 1. Find the salary of all employees
+SELECT salary FROM emph1
+UNION ALL
+SELECT salary FROM emph2;
+
+-- 2. Find the name of all employees where salary = 15000
+SELECT e1.ename 
+FROM empv1 e1
+JOIN empv2 e2 ON e1.eno = e2.eno
+WHERE e2.salary = 15000;
+
+-- 3. Find the employee’s name and city where salary is between 15000 to 25000
+SELECT e1.ename, e2.city
+FROM empv1 e1
+JOIN empv2 e2 ON e1.eno = e2.eno
+WHERE e2.salary BETWEEN 15000 AND 25000;
+
+-- 4. Find the employee’s name and city where employee number is known
+-- Replace 'X' with the known employee number
+SELECT e1.ename, e2.city
+FROM empv1 e1
+JOIN empv2 e2 ON e1.eno = e2.eno
+WHERE e1.eno = X;

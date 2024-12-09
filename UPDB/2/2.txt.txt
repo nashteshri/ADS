@@ -1,0 +1,108 @@
+-- Experiment 2: Advanced Database Systems Lab
+
+-- Part 1: Creating Object Types and Inheritance
+CREATE OR REPLACE TYPE PersonType AS OBJECT (
+    person_id VARCHAR2(10), 
+    fname VARCHAR2(50), 
+    lname VARCHAR2(50),
+    dob DATE,
+    MEMBER FUNCTION FullName RETURN VARCHAR2, 
+    MEMBER FUNCTION OnDate RETURN DATE
+) NOT FINAL;
+
+CREATE OR REPLACE TYPE BODY PersonType AS 
+    MEMBER FUNCTION FullName RETURN VARCHAR2 IS 
+    BEGIN 
+        RETURN fname || ' ' || lname; 
+    END;
+    
+    MEMBER FUNCTION OnDate RETURN DATE IS 
+    BEGIN 
+        RETURN dob; 
+    END; 
+END;
+
+CREATE TYPE EmpObjType UNDER PersonType (
+    job VARCHAR2(50), 
+    salary NUMBER, 
+    da NUMBER, 
+    doj DATE,
+    OVERRIDING MEMBER FUNCTION OnDate RETURN DATE, 
+    MEMBER FUNCTION Earn RETURN NUMBER
+);
+
+CREATE OR REPLACE TYPE BODY EmpObjType AS 
+    OVERRIDING MEMBER FUNCTION OnDate RETURN DATE IS 
+    BEGIN 
+        RETURN doj; 
+    END;
+    
+    MEMBER FUNCTION Earn RETURN NUMBER IS 
+    BEGIN 
+        RETURN salary + da; 
+    END; 
+END;
+
+CREATE TABLE Employee OF EmpObjType (
+    CONSTRAINT emp_id PRIMARY KEY(person_id)
+);
+
+-- Insert Employee Records
+INSERT INTO Employee VALUES ('1', 'Pushkaraj', 'Yadav', DATE '2003-04-04', 'Developer', 20000, 5000, DATE '2025-05-05');
+INSERT INTO Employee VALUES ('2', 'Aryan', 'Mangrule', DATE '1990-02-20', 'Engineer', 40000, 4000, DATE '2015-07-10');
+
+-- Query to Display Employee Details
+SELECT e.FullName() AS Employee_Name, e.OnDate() AS Join_Date, e.Earn() AS Earning FROM Employee e;
+
+-- Part 2: Implementing Table Inheritance
+CREATE OR REPLACE TYPE People AS OBJECT (
+    fname VARCHAR2(50),
+    lname VARCHAR2(50),
+    mname VARCHAR2(50),
+    birth_date DATE
+) NOT FINAL;
+
+CREATE OR REPLACE TYPE Student UNDER People (
+    grade NUMBER, 
+    class VARCHAR2(50), 
+    parent_name VARCHAR2(100)
+);
+
+CREATE OR REPLACE TYPE Teacher UNDER People (
+    classes_taught VARCHAR2(100), 
+    skills VARCHAR2(100), 
+    employment_info VARCHAR2(100)
+);
+
+CREATE OR REPLACE TYPE Parent UNDER People (
+    children VARCHAR2(100)
+);
+
+CREATE TABLE students OF Student (
+    PRIMARY KEY (fname, lname)
+);
+
+CREATE TABLE teachers OF Teacher (
+    PRIMARY KEY (fname, lname)
+);
+
+CREATE TABLE parents OF Parent (
+    PRIMARY KEY (fname, lname)
+);
+
+-- Insert Records into Students
+INSERT INTO students VALUES ('Pushkaraj', 'Yadav', 'D', DATE '2003-07-10', 9, 'Class A', 'Dilip Yadav');
+INSERT INTO students VALUES ('Aryan', 'Mangrule', 'S', DATE '2003-05-22', 8, 'Class B', 'Sachin Mangrule');
+
+-- Insert Records into Parents
+INSERT INTO parents VALUES ('Dilip', 'Yadav', 'K', DATE '1975-04-10', 'Pushkaraj Yadav');
+INSERT INTO parents VALUES ('Sachin', 'Mangrule', 'M', DATE '1972-07-23', 'Aryan Mangrule');
+
+-- Insert Records into Teachers
+INSERT INTO teachers VALUES ('Pooja', 'Reddy', 'T', DATE '1985-05-10', 'Math, Science', 'Math Expert', '10 Years');
+INSERT INTO teachers VALUES ('Sonal', 'Mishra', 'A', DATE '1980-04-20', 'English, History', 'Literature Specialist', '12 Years');
+
+-- Queries to Display Data
+SELECT * FROM students;
+SELECT * FROM teachers;
+SELECT * FROM parents;

@@ -1,0 +1,157 @@
+-- Creating Custom Data Types
+CREATE TYPE NAMETYPE AS OBJECT (
+ firstName VARCHAR(20),
+ lastName VARCHAR(20)
+);
+CREATE TYPE PHONENUMARRAY AS VARRAY(3) OF VARCHAR(10);
+CREATE TYPE AUTHORIDARRAY AS VARRAY(5) OF VARCHAR(20);
+CREATE TYPE PUBLISHERTYPE AS OBJECT (
+ pub_id VARCHAR(20),
+ pub_name VARCHAR(50),
+ branch VARCHAR(20)
+);
+CREATE TYPE KEYWORDARRAY AS VARRAY(20) OF VARCHAR(20);
+
+-- Creating Tables
+CREATE TABLE AUTHOR (
+ author_id VARCHAR(10) NOT NULL PRIMARY KEY,
+ name NAMETYPE NOT NULL,
+ phone PHONENUMARRAY NOT NULL
+);
+CREATE TABLE BOOK (
+ isbn INT NOT NULL PRIMARY KEY,
+ title VARCHAR(50) NOT NULL,
+ author_id AUTHORIDARRAY NOT NULL,
+ categ VARCHAR(20) NOT NULL,
+ publisher PUBLISHERTYPE NOT NULL,
+ keywords KEYWORDARRAY,
+ price NUMBER(10,2)
+);
+CREATE TABLE CUSTOMER (
+ customer_id VARCHAR(10) NOT NULL PRIMARY KEY,
+ name NAMETYPE,
+ phone PHONENUMARRAY
+);
+CREATE TABLE BOOK_SALE (
+ sale_id VARCHAR(10) NOT NULL PRIMARY KEY,
+ customer_id VARCHAR(10),
+ isbn INT,
+ FOREIGN KEY (customer_id) REFERENCES CUSTOMER(customer_id),
+ FOREIGN KEY (isbn) REFERENCES BOOK(isbn)
+);
+
+-- Sample Data for AUTHOR
+INSERT INTO AUTHOR VALUES ('A01', NAMETYPE('James', 'Anderson'), PHONENUMARRAY('9104127374', '9522847374'));
+-- Repeat for other authors...
+
+-- Sample Data for BOOK
+INSERT INTO BOOK VALUES (101, 'Compiler Construction', AUTHORIDARRAY('A01', 'A02'), 'Education', 
+ PUBLISHERTYPE('P02', 'TATA McGraw Hill', 'US'), KEYWORDARRAY('Lexical Analysis', 'Syntax Trees'), 120);
+-- Repeat for other books...
+
+-- Queries
+-- Q1: Retrieve book details along with authors
+SELECT B.isbn, B.title, A.name.firstName || ' ' || A.name.lastName AS author_name
+FROM BOOK B, TABLE(B.author_id) AID, AUTHOR A
+WHERE A.author_id = AID.COLUMN_VALUE;
+
+-- Q2: List customers who bought books from a specific publisher
+SELECT DISTINCT C.customer_id, C.name.firstName || ' ' || C.name.lastName AS customer_name
+FROM CUSTOMER C JOIN BOOK_SALE BS ON C.customer_id = BS.customer_id
+JOIN BOOK B ON BS.isbn = B.isbn
+WHERE B.publisher.pub_name = 'TATA McGraw Hill';
+
+-- Q3: Customers and books ordered from UK or US publishers
+SELECT C.name.firstName || ' ' || C.name.lastName AS customer_name, B.title, B.publisher.pub_name AS publisher_name
+FROM CUSTOMER C
+JOIN BOOK_SALE BS ON C.customer_id = BS.customer_id
+JOIN BOOK B ON BS.isbn = B.isbn
+WHERE B.publisher.branch IN ('UK', 'US')
+ORDER BY C.name.lastName;
+
+-- Q4: Count books by category
+SELECT B.categ AS category, COUNT(*) AS book_count
+FROM BOOK B
+GROUP BY B.categ;
+
+-- Q5: Count books sold by each author
+SELECT A.name.firstName, COUNT(BS.sale_id) AS books_sold
+FROM BOOK B
+JOIN TABLE(B.author_id) AID ON 1 = 1
+JOIN AUTHOR A ON A.author_id = AID.COLUMN_VALUE
+JOIN BOOK_SALE BS ON B.isbn = BS.isbn
+GROUP BY A.name.firstName;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Creating Custom Data Types
+CREATE TYPE ExamType AS OBJECT (
+ year NUMBER,
+ city VARCHAR2(50)
+);
+CREATE TYPE ChildType AS OBJECT (
+ name VARCHAR2(50),
+ birthday DATE
+);
+CREATE TYPE ExamSet AS VARRAY(10) OF EXAMTYPE;
+CREATE TYPE SkillType AS OBJECT (
+ type VARCHAR2(50),
+ exams ExamSet
+);
+CREATE TYPE SkillSet AS VARRAY(10) OF SKILLTYPE;
+CREATE TYPE ChildrenSet AS VARRAY(10) OF ChildType;
+
+-- Creating EMP Table
+CREATE TABLE EMP (
+ ename VARCHAR(50),
+ children CHILDRENSET,
+ skills SKILLSET
+);
+
+-- Sample Data
+INSERT INTO EMP VALUES (
+ 'Rajesh Sharma', 
+ CHILDRENSET(CHILDTYPE('Aman', TO_DATE('2001-05-15', 'YYYY-MM-DD')), CHILDTYPE('Neha', TO_DATE('1998-03-22', 'YYYY-MM-DD'))),
+ SKILLSET(SKILLTYPE('typing', EXAMSET(EXAMTYPE(2023, 'Dayton'), EXAMTYPE(2021, 'Cleveland'))), 
+ SKILLTYPE('programming', EXAMSET(EXAMTYPE(2020, 'New York'))))
+);
+-- Repeat for other employees...
+
+-- Queries
+-- Q1: Employees with children born on or after 2000
+SELECT ENAME
+FROM EMP E
+WHERE EXISTS (
+ SELECT 1
+ FROM TABLE(E.CHILDREN) C
+ WHERE C.BIRTHDAY >= TO_DATE('2000-01-01', 'YYYY-MM-DD')
+);
+
+-- Q2: Employees who took a typing exam in Dayton
+SELECT ENAME
+FROM EMP E
+WHERE EXISTS (
+ SELECT 1
+ FROM TABLE(E.SKILLS) S, TABLE(S.EXAMS) EX
+ WHERE S.TYPE = 'typing'
+ AND EX.CITY = 'Dayton'
+);
+
+-- Q3: List all skill types in EMP
+SELECT DISTINCT(S.TYPE) AS SKILLTYPES
+FROM EMP E, TABLE(E.SKILLS) S;

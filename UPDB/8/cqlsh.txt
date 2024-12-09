@@ -1,0 +1,152 @@
+Connected to Test Cluster at 127.0.0.1:9042.
+[cqlsh 5.0.1 | Cassandra 2.2.3 | CQL spec 3.3.1 | Native protocol v4]
+Use HELP for help.
+WARNING: pyreadline dependency missing.  Install to enable tab completion.
+cqlsh> create keyspace employee with replication = {'class':'SimpleStrategy', 'replication_factor':2};
+cqlsh> use employee;
+cqlsh:employee> create table emp_table(emp_id int primary key, name text, city text, designation text, experience float);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (101, 'Sujay', 'Kolhapur', 'Java Developer', 4.5);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (102, 'Prashant', 'Kolhapur', 'Data Entry Operator', 10.3);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (103, 'Tanmay', 'Pune', 'Database Engineer', 7);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (104, 'Pranav', 'Sangli', 'MERN Developer', 8);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (105, 'Manish', 'Mumbai', 'Data Scientist', 3);
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience) values (106, 'Aditya', 'Kolhapur', 'Web Developer', 3);
+cqlsh:employee>
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | experience | name
+--------+----------+---------------------+------------+----------
+    105 |   Mumbai |      Data Scientist |          3 |   Manish
+    104 |   Sangli |      MERN Developer |          8 |   Pranav
+    102 | Kolhapur | Data Entry Operator |       10.3 | Prashant
+    106 | Kolhapur |       Web Developer |          3 |   Aditya
+    101 | Kolhapur |      Java Developer |        4.5 |    Sujay
+    103 |     Pune |   Database Engineer |          7 |   Tanmay
+
+(6 rows)
+cqlsh:employee> update emp_table set city='Mumbai', designation='Android Developer', experience=5.7 where emp_id=106;
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | experience | name
+--------+----------+---------------------+------------+----------
+    105 |   Mumbai |      Data Scientist |          3 |   Manish
+    104 |   Sangli |      MERN Developer |          8 |   Pranav
+    102 | Kolhapur | Data Entry Operator |       10.3 | Prashant
+    106 |   Mumbai |   Android Developer |        5.7 |   Aditya
+    101 | Kolhapur |      Java Developer |        4.5 |    Sujay
+    103 |     Pune |   Database Engineer |          7 |   Tanmay
+
+(6 rows)
+cqlsh:employee> ALTER TABLE emp_table ADD email TEXT;
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | email | experience | name
+--------+----------+---------------------+-------+------------+----------
+    105 |   Mumbai |      Data Scientist |  null |          3 |   Manish
+    104 |   Sangli |      MERN Developer |  null |          8 |   Pranav
+    102 | Kolhapur | Data Entry Operator |  null |       10.3 | Prashant
+    106 |   Mumbai |   Android Developer |  null |        5.7 |   Aditya
+    101 | Kolhapur |      Java Developer |  null |        4.5 |    Sujay
+    103 |     Pune |   Database Engineer |  null |          7 |   Tanmay
+
+(6 rows)
+cqlsh:employee> ALTER TABLE emp_table DROP emaiL;
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | experience | name
+--------+----------+---------------------+------------+----------
+    105 |   Mumbai |      Data Scientist |          3 |   Manish
+    104 |   Sangli |      MERN Developer |          8 |   Pranav
+    102 | Kolhapur | Data Entry Operator |       10.3 | Prashant
+    106 |   Mumbai |   Android Developer |        5.7 |   Aditya
+    101 | Kolhapur |      Java Developer |        4.5 |    Sujay
+    103 |     Pune |   Database Engineer |          7 |   Tanmay
+
+(6 rows)
+cqlsh:employee> ALTER TABLE emp_table ADD email SET<TEXT>;
+cqlsh:employee> ALTER TABLE emp_table ADD expertise LIST<TEXT>;
+cqlsh:employee> ALTER TABLE emp_table ADD prev_jobs MAP<TEXT, INT>;
+cqlsh:employee>
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | email | experience | expertise | name     | prev_jobs
+--------+----------+---------------------+-------+------------+-----------+----------+-----------
+    105 |   Mumbai |      Data Scientist |  null |          3 |      null |   Manish |      null
+    104 |   Sangli |      MERN Developer |  null |          8 |      null |   Pranav |      null
+    102 | Kolhapur | Data Entry Operator |  null |       10.3 |      null | Prashant |      null
+    106 |   Mumbai |   Android Developer |  null |        5.7 |      null |   Aditya |      null
+    101 | Kolhapur |      Java Developer |  null |        4.5 |      null |    Sujay |      null
+    103 |     Pune |   Database Engineer |  null |          7 |      null |   Tanmay |      null
+
+(6 rows)
+cqlsh:employee> update emp_table set email={'sujay@gmail.com'}, expertise=['Java','Flutter','SQL'], prev_jobs={'Jr. Web Developer':2, 'Flutter Developer':4} where emp_id=101;
+cqlsh:employee> update emp_table set email={'prashant@gmail.com'}, expertise=['Python','C++'], prev_jobs={'Data Entry Operator':1, 'Database Engineer':3} where emp_id=102;
+cqlsh:employee>
+cqlsh:employee> insert into emp_table(emp_id, name, city, designation, experience, email, expertise, prev_jobs) values (107, 'Soham', 'Mumbai', 'AIML Scientist', 3, {'soham@gmail.com'}, ['AI', 'ML', 'DB'], {'Data Scientist': 2, 'ML Engineer':3});
+cqlsh:employee>
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | email                  | experience | expertise                  | name     | prev_jobs
+--------+----------+---------------------+------------------------+------------+----------------------------+----------+----------------------------------------------------
+    105 |   Mumbai |      Data Scientist |                   null |          3 |                       null |   Manish |                                               null
+    107 |   Mumbai |      AIML Scientist |    {'soham@gmail.com'} |          3 |         ['AI', 'ML', 'DB'] |    Soham |            {'Data Scientist': 2, 'ML Engineer': 3}
+    104 |   Sangli |      MERN Developer |                   null |          8 |                       null |   Pranav |                                               null
+    102 | Kolhapur | Data Entry Operator | {'prashant@gmail.com'} |       10.3 |          ['Python', 'C++'] | Prashant | {'Data Entry Operator': 1, 'Database Engineer': 3}
+    106 |   Mumbai |   Android Developer |                   null |        5.7 |                       null |   Aditya |                                               null
+    101 | Kolhapur |      Java Developer |    {'sujay@gmail.com'} |        4.5 | ['Java', 'Flutter', 'SQL'] |    Sujay |   {'Flutter Developer': 4, 'Jr. Web Developer': 2}
+    103 |     Pune |   Database Engineer |                   null |          7 |                       null |   Tanmay |                                               null
+
+(7 rows)
+cqlsh:employee> DELETE FROM emp_table WHERE emp_id=105;
+cqlsh:employee> select * from emp_table;
+
+ emp_id | city     | designation         | email                  | experience | expertise                  | name     | prev_jobs
+--------+----------+---------------------+------------------------+------------+----------------------------+----------+----------------------------------------------------
+    107 |   Mumbai |      AIML Scientist |    {'soham@gmail.com'} |          3 |         ['AI', 'ML', 'DB'] |    Soham |            {'Data Scientist': 2, 'ML Engineer': 3}
+    104 |   Sangli |      MERN Developer |                   null |          8 |                       null |   Pranav |                                               null
+    102 | Kolhapur | Data Entry Operator | {'prashant@gmail.com'} |       10.3 |          ['Python', 'C++'] | Prashant | {'Data Entry Operator': 1, 'Database Engineer': 3}
+    106 |   Mumbai |   Android Developer |                   null |        5.7 |                       null |   Aditya |                                               null
+    101 | Kolhapur |      Java Developer |    {'sujay@gmail.com'} |        4.5 | ['Java', 'Flutter', 'SQL'] |    Sujay |   {'Flutter Developer': 4, 'Jr. Web Developer': 2}
+    103 |     Pune |   Database Engineer |                   null |          7 |                       null |   Tanmay |                                               null
+
+(6 rows)
+cqlsh:employee>
+cqlsh:employee>
+cqlsh:employee>
+cqlsh:employee> create table product(id uuid primary key, name text, price float, quant int);
+cqlsh:employee>
+cqlsh:employee> insert into product(id, name, price, quant) values (now(), 'Pen-Drive', 450.30, 10);
+cqlsh:employee> insert into product(id, name, price, quant) values (now(), 'HDD', 10000.45, 13);
+cqlsh:employee> insert into product(id, name, price, quant) values (now(), 'SDD', 2000, 300);
+cqlsh:employee>
+cqlsh:employee> select * from product;
+
+ id                                   | name      | price      | quant
+--------------------------------------+-----------+------------+-------
+ 317aa780-ab2b-11ef-b31e-b9780e10d4ab |       HDD | 10000.4502 |    13
+ 144abb00-ab2b-11ef-b31e-b9780e10d4ab | Pen-Drive |  450.29999 |    10
+ 3fa276d0-ab2b-11ef-b31e-b9780e10d4ab |       SDD |       2000 |   300
+
+(3 rows)
+cqlsh:employee>
+cqlsh:employee>  ALTER TABLE product ADD inv_date TIMESTAMP;
+cqlsh:employee>  ALTER TABLE product ADD available BOOLEAN;
+cqlsh:employee>
+cqlsh:employee> insert into product(id, name, price, quant, inv_date, available) values (now(), 'Keyboard', 300.40, 225, toTimestamp(now()), true);
+cqlsh:employee> insert into product(id, name, price, quant, inv_date, available) values (now(), 'Speakers', 700.80, 0, toTimestamp(now()), false);
+cqlsh:employee>
+cqlsh:employee> select * from product;
+
+ id                                   | available | inv_date                 | name      | price      | quant
+--------------------------------------+-----------+--------------------------+-----------+------------+-------
+ 317aa780-ab2b-11ef-b31e-b9780e10d4ab |      null |                     null |       HDD | 10000.4502 |    13
+ 82977750-ab2c-11ef-b31e-b9780e10d4ab |      True | 2024-11-25 12:55:12+0000 |  Keyboard |  300.39999 |   225
+ 144abb00-ab2b-11ef-b31e-b9780e10d4ab |      null |                     null | Pen-Drive |  450.29999 |    10
+ ab8d9c70-ab2c-11ef-b31e-b9780e10d4ab |     False | 2024-11-25 12:56:21+0000 |  Speakers |  700.79999 |     0
+ 3fa276d0-ab2b-11ef-b31e-b9780e10d4ab |      null |                     null |       SDD |       2000 |   300
+
+(5 rows)
+cqlsh:employee>
+
+
+

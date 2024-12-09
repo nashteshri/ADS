@@ -1,0 +1,106 @@
+-- Oracle Sequences and Customer Table
+-- 1. Create the `customer` table
+CREATE TABLE customer (
+    cus_code INTEGER PRIMARY KEY,
+    cus_lname VARCHAR2(10),
+    cus_fname VARCHAR2(10),
+    cus_initial VARCHAR2(1),
+    cus_areacode INTEGER,
+    cus_phone INTEGER,
+    cus_balance NUMBER(10, 2)
+);
+
+-- i. Create sequence for cus_code
+CREATE SEQUENCE cus_code_seq 
+START WITH 1 
+INCREMENT BY 1 
+NOCACHE;
+
+-- ii. Display user sequences
+SELECT sequence_name, last_number FROM user_sequences;
+
+-- iii. Insert values into customer using sequence
+INSERT INTO customer (cus_code, cus_lname, cus_fname, cus_initial, cus_areacode, cus_phone, cus_balance)
+VALUES (cus_code_seq.NEXTVAL, 'Smith', 'John', 'D', 123, 9876543210, 5000.00);
+
+INSERT INTO customer (cus_code, cus_lname, cus_fname, cus_initial, cus_areacode, cus_phone, cus_balance)
+VALUES (cus_code_seq.NEXTVAL, 'Doe', 'Jane', 'A', 456, 9876543211, 7500.00);
+
+-- iv. Display customer records
+SELECT * FROM customer;
+
+-- Triggers for Student Report
+-- 1. Create `student_report` table
+CREATE TABLE student_report (
+    tid INT PRIMARY KEY,
+    name VARCHAR2(30),
+    subj1 INT CHECK (subj1 <= 20),
+    subj2 INT CHECK (subj2 <= 20),
+    subj3 INT CHECK (subj3 <= 20),
+    total INT DEFAULT 0,
+    per INT DEFAULT 0
+);
+
+-- 2. Create trigger to calculate total and percentage
+CREATE OR REPLACE TRIGGER trg_calculate_total
+BEFORE INSERT ON student_report
+FOR EACH ROW
+BEGIN
+    :NEW.total := NVL(:NEW.subj1, 0) + NVL(:NEW.subj2, 0) + NVL(:NEW.subj3, 0);
+    :NEW.per := (:NEW.total * 100) / 60;
+END;
+/
+
+-- Insert data into student_report
+INSERT INTO student_report (tid, name, subj1, subj2, subj3) 
+VALUES (1, 'Alice', 18, 19, 20);
+
+INSERT INTO student_report (tid, name, subj1, subj2, subj3) 
+VALUES (2, 'Bob', 15, 16, 17);
+
+-- Display student_report records
+SELECT * FROM student_report;
+
+-- Procedure and Cursor
+-- 1. Create `course` table
+CREATE TABLE course (
+    course_num INTEGER PRIMARY KEY,
+    course_name VARCHAR2(20),
+    dept_name VARCHAR2(15),
+    credits INTEGER
+);
+
+-- Insert sample data into course table
+INSERT INTO course VALUES (101, 'CS101', 'CSE', 4);
+INSERT INTO course VALUES (102, 'Calculus', 'MATH', 3);
+INSERT INTO course VALUES (103, 'CSE201', 'CSE', 3);
+INSERT INTO course VALUES (104, 'Chemistry', 'CHEM', 3);
+
+-- i. Procedure to find course_name and credits where course_name starts with 'C'
+CREATE OR REPLACE PROCEDURE find_courses_starting_with_c IS
+    CURSOR c_course IS
+        SELECT course_name, credits FROM course WHERE course_name LIKE 'C%';
+BEGIN
+    FOR rec IN c_course LOOP
+        DBMS_OUTPUT.PUT_LINE('Course: ' || rec.course_name || ', Credits: ' || rec.credits);
+    END LOOP;
+END;
+/
+
+-- ii. Procedure to find course names from 'CSE' department
+CREATE OR REPLACE PROCEDURE find_cse_courses IS
+    CURSOR c_cse IS
+        SELECT course_name FROM course WHERE dept_name = 'CSE';
+BEGIN
+    FOR rec IN c_cse LOOP
+        DBMS_OUTPUT.PUT_LINE('Course: ' || rec.course_name);
+    END LOOP;
+END;
+/
+
+-- Execute Procedures
+BEGIN
+    find_courses_starting_with_c;
+    find_cse_courses;
+END;
+/

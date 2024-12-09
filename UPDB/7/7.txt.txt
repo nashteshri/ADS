@@ -1,0 +1,67 @@
+// Problem Statement 1
+// 1. Create database and collection
+use product; // Switch to 'product' database
+
+// Create 'inventory' collection and insert documents
+db.inventory.insertOne({ item: "pencil", qty: 50, status: "A" });
+db.inventory.insertMany([
+    { item: "pen", qty: 20, status: "D" },
+    { item: "notebook", qty: 100, status: "A" },
+    { item: "eraser", qty: 15, status: "D" }
+]);
+
+// Update documents
+db.inventory.updateOne({ item: "pencil" }, { $set: { qty: 60 } });
+db.inventory.updateMany({ status: "A" }, { $set: { available: true } });
+
+// Replace documents
+db.inventory.replaceOne(
+    { item: "eraser" },
+    { item: "eraser", qty: 25, status: "D", available: true }
+);
+db.inventory.replaceMany(
+    { status: "D" },
+    { item: "generic-item", qty: 0, status: "D", available: false }
+);
+
+// Delete documents
+db.inventory.deleteOne({ item: "pencil" });
+db.inventory.deleteMany({ status: "D" });
+
+// Find documents
+db.inventory.find();
+
+// Perform queries with filters
+db.inventory.find(); // Equivalent to SELECT * FROM inventory
+db.inventory.find({ status: "D" }); // SELECT * FROM inventory WHERE status = "D"
+db.inventory.find({ status: { $in: ["A", "D"] } }); // SELECT * FROM inventory WHERE status IN ("A", "D")
+db.inventory.find({ status: "A", qty: { $lt: 30 } }); // SELECT * FROM inventory WHERE status = "A" AND qty < 30
+db.inventory.find({ $or: [{ status: "A" }, { qty: { $lt: 30 } }] }); // SELECT * FROM inventory WHERE status = "A" OR qty < 30
+db.inventory.find({ status: "A", $or: [{ qty: { $lt: 30 } }, { item: /^p/ }] }); // SELECT * FROM inventory WHERE status = "A" AND (qty < 30 OR item LIKE "p%")
+
+// Problem Statement 2
+// 1. Create 'books' collection and insert documents
+db.books.insertMany([
+    { title: "1984", author: "George Orwell", year: 1949, genre: "Dystopian" },
+    { title: "To Kill a Mockingbird", author: "Harper Lee", year: 1960, genre: "Fiction" },
+    { title: "The Great Gatsby", author: "F. Scott Fitzgerald", year: 1925, genre: "Fiction" },
+    { title: "Brave New World", author: "Aldous Huxley", year: 1932, genre: "Dystopian" },
+    { title: "Moby Dick", author: "Herman Melville", year: 1851, genre: "Adventure" }
+]);
+
+// Queries on 'books' collection
+db.books.find({ year: { $gt: 1950 } }); // Find books published after 1950
+db.books.find({ genre: "Dystopian", year: { $lt: 1950 } }); // Find Dystopian books published before 1950
+db.books.updateOne({ title: "1984" }, { $set: { genre: "Science Fiction" } }); // Update genre of "1984"
+db.books.deleteMany({ genre: "Fiction" }); // Delete all books in Fiction genre
+db.books.aggregate([{ $group: { _id: "$genre", total: { $sum: 1 } } }]); // Count total books by genre
+db.books.createIndex({ author: 1 }); // Create index on author field
+db.books.find().sort({ year: 1 }); // Retrieve books sorted by year (ascending)
+db.books.countDocuments({ author: "Harper Lee" }); // Count books by Harper Lee
+db.books.find({}, { title: 1, author: 1, _id: 0 }); // Retrieve only titles and authors
+
+// Additional Queries with filters
+db.books.find({ year: { $gte: 1930, $lte: 1960 } }); // Books published between 1930 and 1960
+db.books.find({ title: { $regex: /The/, $options: "i" } }); // Books with "The" in title
+db.books.find({ genre: "Fiction", year: { $lt: 1950 } }); // Books published before 1950 and in Fiction genre
+db.books.find({ author: { $ne: "Aldous Huxley" } }); // Books not written by Aldous Huxley
